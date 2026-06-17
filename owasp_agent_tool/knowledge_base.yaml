@@ -1,0 +1,63 @@
+# Fill this in with details about your own application.
+# - app_context is shared across every agent.
+# - each category section only feeds that category's agent.
+# Leave any field empty/[] if you don't have it yet - nothing here is required.
+
+app_context:
+  tech_stack: ""           # e.g. "Python/FastAPI backend, React frontend, Postgres, AWS"
+  auth_flow: ""             # e.g. "JWT bearer tokens, 15 min expiry, refresh via /auth/refresh"
+  sensitive_endpoints: []   # e.g. ["/api/orders/*", "/api/admin/*", "/api/payments/*"]
+
+categories:
+  "A01:broken_access_control":
+    business_rules: []
+    # e.g. ["Users can only view/edit orders where order.user_id == current_user.id"]
+    known_false_positives: []
+    # e.g. ["'Insecure HTTP Method' alert on /api/health - that endpoint is intentionally public"]
+    past_examples: []
+    # e.g. [{finding: "IDOR on /api/orders/:id", assigned_severity: "critical", why: "exposed other users' payment data with no auth check"}]
+
+  "A02:cryptographic_failures":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A03:injection":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A04:insecure_design":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A05:security_misconfiguration":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A06:vulnerable_components":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A07:auth_failures":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A08:integrity_failures":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A09:logging_failures":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []
+
+  "A10:ssrf":
+    business_rules: []
+    known_false_positives: []
+    past_examples: []

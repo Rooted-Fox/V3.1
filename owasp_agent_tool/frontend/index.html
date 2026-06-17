@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vuln console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <div class="scan-beam" aria-hidden="true"></div>
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">&#9678;</span>
+    <span class="brand-name">vuln console</span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab active" data-tab="dashboard" role="tab" aria-selected="true">Dashboard</button>
+    <button class="tab" data-tab="findings" role="tab" aria-selected="false">Findings</button>
+    <button class="tab" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+  </nav>
+  <div class="status-pill" id="statusPill">idle</div>
+</header>
+
+<main>
+
+  <section id="panel-dashboard" class="panel active" role="tabpanel">
+    <h1>Live findings overview</h1>
+    <p class="lede">Counts reflect open findings the agents have already triaged.</p>
+
+    <div class="field" style="max-width: 280px; margin-bottom: 20px;">
+      <label for="appSelectDashboard">Application</label>
+      <select id="appSelectDashboard">
+        <option value="">All applications</option>
+      </select>
+    </div>
+
+    <section class="block">
+      <div class="metric-grid" id="metricGrid"></div>
+    </section>
+
+    <section class="block">
+      <h2>By OWASP category</h2>
+      <div class="category-grid" id="categoryGrid"></div>
+    </section>
+
+    <section class="block">
+      <h2>Run a scan</h2>
+      <form class="scan-form" id="scanForm">
+        <input type="text" id="targetUrlInput" placeholder="https://staging.your-app.com" autocomplete="off">
+        <input type="text" id="appNameInput" placeholder="App name (optional - defaults to the hostname)" autocomplete="off">
+        <button type="submit" class="primary" id="scanButton">Run scan</button>
+      </form>
+      <p class="form-note" id="scanNote">Scanning never spends Anthropic tokens - it just collects findings for review. Only use a URL you own and are authorized to test.</p>
+      <p class="inline-error" id="scanError" hidden></p>
+    </section>
+
+    <section class="block" id="pendingBlock" hidden>
+      <h2>Pending AI review</h2>
+      <div class="pending-card" id="pendingCard"></div>
+    </section>
+  </section>
+
+  <section id="panel-findings" class="panel" role="tabpanel" hidden>
+    <h1>Findings</h1>
+    <p class="lede">Every finding the agents have reviewed, most recent first.</p>
+
+    <div class="findings-filters">
+      <select id="appSelectFindings">
+        <option value="">All applications</option>
+      </select>
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+      <select id="severityFilter">
+        <option value="">All severities</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+        <option value="info">Info</option>
+      </select>
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+        <option value="open">Open</option>
+        <option value="in_review">In review</option>
+        <option value="patched">Patched</option>
+        <option value="dismissed">Dismissed</option>
+      </select>
+    </div>
+
+    <div id="findingsList"></div>
+  </section>
+
+  <section id="panel-settings" class="panel" role="tabpanel" hidden>
+    <h1>Settings</h1>
+    <p class="lede">These are read fresh by every scan - no restart needed after saving.</p>
+
+    <form class="settings-form" id="settingsForm">
+      <div class="field">
+        <label for="apiKeyInput">Anthropic API key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+        <span class="field-hint">Powers the ten OWASP triage agents. Stored locally, never shown again after saving.</span>
+        <span class="key-status" id="apiKeyStatus"></span>
+      </div>
+
+      <div class="field">
+        <label for="modelInput">Agent model</label>
+        <input type="text" id="modelInput" placeholder="claude-opus-4-6">
+      </div>
+
+      <div class="field">
+        <label for="zapUrlInput">ZAP API URL</label>
+        <input type="text" id="zapUrlInput" placeholder="http://localhost:8090">
+      </div>
+
+      <div class="field">
+        <label for="zapKeyInput">ZAP API key</label>
+        <input type="password" id="zapKeyInput" placeholder="leave blank to keep current value">
+        <span class="key-status" id="zapKeyStatus"></span>
+      </div>
+
+      <div class="field">
+        <label for="slackInput">Slack webhook URL (optional)</label>
+        <input type="password" id="slackInput" placeholder="leave blank to keep current value">
+        <span class="field-hint">Pings this URL when a scan finds anything critical and exploitable.</span>
+        <span class="key-status" id="slackStatus"></span>
+      </div>
+
+      <div>
+        <button type="submit" class="primary">Save settings</button>
+      </div>
+    </form>
+
+    <section class="block" style="margin-top: 32px;">
+      <h2>Token governance</h2>
+      <p class="lede">AI triage is never automatic - it only runs when you approve it from the Dashboard. This is the budget that governs it.</p>
+
+      <div class="field" style="max-width: 280px; margin-bottom: 16px;">
+        <label for="tokenLimitInput">Token limit</label>
+        <input type="text" id="tokenLimitInput" placeholder="0 = unlimited" inputmode="numeric">
+        <span class="field-hint">Triage stops once cumulative usage reaches this. Checked before each finding, so it can overshoot slightly on the last one.</span>
+      </div>
+      <button type="button" class="primary" id="saveTokenLimitButton">Save limit</button>
+
+      <div class="metric-grid" style="margin-top: 20px; max-width: 480px;" id="tokenMetricGrid"></div>
+
+      <button type="button" class="ghost" id="resetTokensButton" style="margin-top: 12px;">Reset usage to zero</button>
+    </section>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
